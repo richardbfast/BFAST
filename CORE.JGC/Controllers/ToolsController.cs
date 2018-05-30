@@ -12,6 +12,7 @@ namespace CORE.JGC.Controllers
         public ActionResult Import()
         {
             return View();
+
         }
 
         public ActionResult Export()
