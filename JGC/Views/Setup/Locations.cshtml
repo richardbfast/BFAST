@@ -1,34 +1,103 @@
 ﻿
+@model CORE.JGC.Models.MsLocation[]
 @{
     ViewBag.Title = "Locations";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <script type="text/javascript">
+    function Sites(Jenis) {
+        var Column = [
+                    { "data": "0" },
+                    { "title": "Site Code", "data": "0" },
+                    { "title": "Site Name", "data": "1" },
+                    { "title": "Address", "data": "2" },
+                    { "title": "City", "data": "3" },
+                    { "title": "Postal Code", "data": "4" },
+                    { "title": "Telephone", "data": "5" }
+        ]
+        DTable("datatablepopup", '@Url.Action("GetPopupSite","Setup")', Column, '{}');
+        $('#datatablepopup tbody').on('click', 'tr', function () {
+            var d = table.row(this).data();
+            if (Jenis == '1') {
+                $("#SiteCode").val(d[0]);
+                $("#SiteName").val(d[1]);
+            }
+            else {
+                $("#EditSiteCode").val(d[0]);
+                $("#EditSiteName").val(d[1]);
+            }
+            $('#Lookup').modal('hide');
+        });
+    }
 
     function InputLocation() {
         var LocationCodeId = document.getElementById("LocationCodeId").value;
         var LocationNameId = document.getElementById("LocationNameId").value;
         var SiteCode = document.getElementById("SiteCode").value;
+        var Aktif = document.getElementById("ActiveId").value;
+
+        if (document.getElementById("ActiveId").checked) {
+            var Aktif = "1";
+        }
+        else {
+            var Aktif = "0";
+        }
 
         if (LocationCodeId == "") {
-            $(".modal-body #peringatan3").text("Location Code harus diisi");
+            $(".modal-body #peringatan3").text("Location Code must be filled");
             $('#btnerror').click(function (e) {
                 $('#Alert3').modal('hide');
             })
             $("#Alert3").modal();
         } else if (LocationNameId == "") {
-            $(".modal-body #peringatan3").text("Location Name harus diisi");
+            $(".modal-body #peringatan3").text("Location Name must be filled");
             $('#btnerror').click(function (e) {
                 $('#Alert3').modal('hide');
             })
             $("#Alert3").modal();
         } else if (SiteCode == "") {
-            $(".modal-body #peringatan3").text("Site harus diisi");
+            $(".modal-body #peringatan3").text("Site must be filled");
             $('#btnerror').click(function (e) {
                 $('#Alert3').modal('hide');
             })
             $("#Alert3").modal();
+        }
+        else {
+                $.ajax({
+                    url: '@Url.Action("InsertLocation", "Setup")',
+                    type: 'post',
+                    cache: false,
+                    async: true,
+                    data: {
+                        LocationCodeId: LocationCodeId,
+                        LocationNameId: LocationNameId,
+                        SiteCode: SiteCode,
+                        ActiveId : Aktif
+                    },
+                    success: function (response) {
+                        if (response.success == true) {
+                            $(".modal-body #peringatan2").text(response.responseText);
+                            $('#btnok').click(function (e) {
+                                  window.location.href = "@Url.Action("Locations","Setup")";
+                            })
+                            $("#Alert2").modal();
+                        } else {
+                            $(".modal-body #peringatan3").text(response.responseText);
+                            $('#btnerror').click(function (e) {
+                                $('#Alert3').modal('hide');
+                            })
+                            $("#Alert3").modal();
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $(".modal-body #peringatan1").text("Please Wait...");
+                        $('#btncaution').click(function (e) {
+                            $('#Alert1').modal('hide');
+                        })
+                        $("#Alert1").modal();
+                    }
+                });
         }
     }
 
@@ -36,26 +105,102 @@
         var EditLocationCodeId = document.getElementById("EditLocationCodeId").value;
         var EditLocationNameId = document.getElementById("EditLocationNameId").value;
         var EditSiteCode = document.getElementById("EditSiteCode").value;
+        var Aktif = document.getElementById("EditActiveId").value;
+
+        if (document.getElementById("EditActiveId").checked) {
+            var Aktif = "1";
+        }
+        else {
+            var Aktif = "0";
+        }
 
         if (EditLocationCodeId == "") {
-            $(".modal-body #peringatan3").text("Location harus diisi");
+            $(".modal-body #peringatan3").text("Location Code must be filled");
             $('#btnerror').click(function (e) {
                 $('#Alert3').modal('hide');
             })
             $("#Alert3").modal();
         } else if (EditLocationNameId == "") {
-            $(".modal-body #peringatan3").text("Location Name harus diisi");
+            $(".modal-body #peringatan3").text("Location Name must be filled");
             $('#btnerror').click(function (e) {
                 $('#Alert3').modal('hide');
             })
             $("#Alert3").modal();
         } else if (EditSiteCode == "") {
-            $(".modal-body #peringatan3").text("Site harus diisi");
+            $(".modal-body #peringatan3").text("Site must be filled");
             $('#btnerror').click(function (e) {
                 $('#Alert3').modal('hide');
             })
             $("#Alert3").modal();
         }
+        else {
+            $(".modal-body #peringatan4").text("Are You Sure Update Data: " + EditLocationCodeId + ' ( ' + EditLocationNameId + " ) ? ");
+            $('#btnyes').click(function (e) {
+                $('#Alert4').modal('hide');
+
+                $.ajax({
+                    url: '@Url.Action("UpdateLocation", "Setup")',
+                    type: 'post',
+                    cache: false,
+                    async: true,
+                    data: {
+                        EditLocationCodeId: EditLocationCodeId,
+                        EditLocationNameId: EditLocationNameId,
+                        EditSiteCode: EditSiteCode,
+                        ActiveId: Aktif
+                    },
+                    success: function (response) {
+                        if (response.success == true) {
+                            $(".modal-body #peringatan2").text(response.responseText);
+                            $('#btnok').click(function (e) {
+                                window.location.href = "@Url.Action("Locations","Setup")";
+                            })
+                            $("#Alert2").modal();
+                        } else {
+                            $(".modal-body #peringatan3").text(response.responseText);
+                            $('#btnerror').click(function (e) {
+                                $('#Alert3').modal('hide');
+                            })
+                            $("#Alert3").modal();
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $(".modal-body #peringatan1").text("Please Wait...");
+                        $('#btncaution').click(function (e) {
+                            $('#Alert1').modal('hide');
+                        })
+                        $("#Alert1").modal();
+                    }
+                });
+            });
+            $('#btnno').click(function (e) {
+                $('#Alert4').modal('hide');
+            });
+            $("#Alert4").modal();
+        }
+    }
+
+    function UpdateLocationS(NoID, LocationCode, LocationName, SiteCode, SiteName, Aktif) {
+        if (Aktif == "Y") {
+            $(".icheckbox_flat-green").addClass('checked');
+        }
+
+        $(".modal-body #EditLocationCodeId").val(LocationCode);
+        $(".modal-body #EditLocationNameId").val(LocationName);
+
+        $(".modal-body #EditSiteCode").val(SiteCode);
+        $(".modal-body #EditSiteName").val(SiteName)
+        ;
+        $(".modal-body #NoID").val(NoID);
+
+        $("#editModal").modal();
+
+    }
+
+    function CancelData() {
+        $(".modal-body #SiteCode").val('');
+        $(".modal-body #SiteName").val('');
+        
     }
 
 </script>
@@ -105,25 +250,29 @@
                             <thead>
                                 <tr>
                                     <th width="3%"><input type="checkbox" id="check-all" class="checks"></th></th>
-                                    <th width="9%">Location Code</th>
+                                    <th width="12%">Location Code</th>
                                     <th>Location Name</th>
                                     <th width="9%">Site Code</th>
+                                    <th width="9%">Site Name</th>
                                     <th>Active</th>
                                     <th style="width:9%;"></th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @foreach (var item in Model)
+                                {
                                 <tr>
                                     <td><input type="checkbox" id="check-all" class="checks"></td>
-                                    <td><a href="#">CPK-PTH</a></td>
-                                    <td><a href="#">Cempaka Putih</a></td>
-                                    <td><a href="#">JKT-PST</a></td>
-                                    <td><a href="#">Yes</a></td>
+                                    <td><a href="#">@Html.DisplayFor(modelItem => item.LocationCode)</a></td>
+                                    <td><a href="#">@Html.DisplayFor(modelItem => item.LocationName)</a></td>
+                                    <td><a href="#">@Html.DisplayFor(modelItem => item.SiteCode)</a></td>
+                                    <td><a href="#">@Html.DisplayFor(modelItem => item.SiteName)</a></td>
+                                    <td><a href="#">@Html.DisplayFor(modelItem => item.bActive)</a></td>
                                     <td class="txtcenter">
-                                        <a href="#" id="editlocationbutton" class="btn btn-default"><span class="glyphicon glyphicon-edit"></span></a>
-                                        <a href="#" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
+                                        <button id="editlocationbutton" name="editlocationbutton" type="button" class="btn btn-success" onclick="UpdateLocationS('@Html.DisplayFor(modelItem => item.Id)','@Html.DisplayFor(modelItem => item.LocationCode)','@Html.DisplayFor(modelItem => item.LocationName)','@Html.DisplayFor(modelItem => item.SiteCode)','@Html.DisplayFor(modelItem => item.SiteName)','@Html.DisplayFor(modelItem => item.Aktif)')"><span class="glyphicon glyphicon-edit"></span>&nbsp;</button>
                                     </td>
                                 </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -165,14 +314,15 @@
                     <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12">Site Code</label>
                         <div class="col-md-9 col-sm-9 col-xs-12">
-                            <input id="SiteCode" list="SiteCode" name="SiteCode" class="form-control" placeholder="Select Site Code">
-                            <datalist id="SiteCode">
-                                <option value="Site Code 1">
-                                <option value="Site Code 2">
-                                <option value="Site Code 3">
-                                <option value="Site Code 4">
-                                <option value="Site Code 5">
-                            </datalist>
+                            <div class="input-group">
+                                <input class="form-control readonly" id="SiteCode" name="SiteCode" value="" type="hidden" data-id="i" autocomplete="off" required="" />
+                                <input class="form-control readonly" id="SiteName" name="SiteName" value="" type="text" data-id="i" autocomplete="off" required="" readonly />
+                                <span class="input-group-btn">
+                                    <a class="btn btn-info" onclick="Sites('1')" data-target="#Lookup" data-toggle="modal" style="margin-right:0;height: 34px;">
+                                        <i class="fa fa-search fa-fw"></i>
+                                    </a>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -191,7 +341,7 @@
                     <div class="form-group col-md-12 col-sm-12 col-xs-12 pdlr0">
                         <div class="row col-md-12 col-sm-12 col-xs-12 pdlr0" style="text-align:right;">
                             <button id="LocationAddId" type="button" class="btn btn-primary" onclick="InputLocation(); return false;">Add</button>
-                            <button id="LocationCancelId" type="button" class="btn btn-default">Cancel</button>
+                            <button id="LocationCancelId" type="button" onclick="CancelData();" class="btn btn-default">Cancel</button>
                         </div>
                     </div>
 
@@ -221,7 +371,8 @@
                     <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12">Location Code</label>
                         <div class="col-md-9 col-sm-9 col-xs-12">
-                            <input id="EditLocationCodeId" type="text" name="LocationCode" class="form-control col-md-10" value="Location Code" placeholder="Location Code" />
+                            <input id="NoId" type="hidden" name="NoId" value=""/>
+                            <input id="EditLocationCodeId" type="text" name="LocationCode" class="form-control col-md-10" value="Location Code" placeholder="Location Code" readonly/>
                         </div>
                     </div>
 
@@ -235,14 +386,15 @@
                     <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12">Site Code</label>
                         <div class="col-md-9 col-sm-9 col-xs-12">
-                            <input id="EditSiteId" list="SiteCode" name="SiteCode" class="form-control" placeholder="Select Site Code">
-                            <datalist id="SiteCode">
-                                <option value="Site Code 1">
-                                <option value="Site Code 2">
-                                <option value="Site Code 3">
-                                <option value="Site Code 4">
-                                <option value="Site Code 5">
-                            </datalist>
+                            <div class="input-group">
+                                <input class="form-control readonly" id="EditSiteCode" name="EditSiteCode" value="" type="hidden" data-id="i" autocomplete="off" required="" />
+                                <input class="form-control readonly" id="EditSiteName" name="EditSiteName" value="" type="text" data-id="i" autocomplete="off" required="" readonly />
+                                <span class="input-group-btn">
+                                    <a class="btn btn-info" onclick="Sites('2')" data-target="#Lookup" data-toggle="modal" style="margin-right:0;height: 34px;">
+                                        <i class="fa fa-search fa-fw"></i>
+                                    </a>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -251,7 +403,7 @@
                         <div class="col-md-9 col-sm-9 col-xs-12">
                             <div class="checkbox">
                                 <label style="padding-left:0 !important">
-                                    <input id="EditActiveId" type="checkbox" class="flat" value=""> Yes
+                                    <input id="EditActiveId" class="flat" name="EditActiveId" type="checkbox" value=""> Yes
                                 </label>
                             </div>
                         </div>
@@ -272,7 +424,7 @@
     </div>
 </div>
 <!-- MODAL2 END -->
-
+@Html.Partial("~/Views/Shared/PopupModal.cshtml")
 @Html.Partial("~/Views/Shared/WarningModal.cshtml")
 @RenderPage("~/Views/Shared/_FooterLayout.cshtml")
 
